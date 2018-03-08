@@ -1,0 +1,227 @@
+import React, {Component} from 'react';
+import {NavigationActions} from 'react-navigation';
+import {
+  Dimensions,
+  View,
+  Image,
+  TouchableOpacity,
+  Alert,
+  PlatformOSType,
+} from 'react-native';
+import {
+  Container,
+  Header,
+  Left,
+  Item,
+  Input,
+  Label,
+  ListItem,
+  CheckBox,
+  Body,
+  Right,
+  Content,
+  Footer,
+  Text,
+  Button,
+  Icon,
+} from 'native-base';
+import FingerprintScanner from 'react-native-fingerprint-scanner';
+
+var width = Dimensions.get ('window').width;
+var height = Dimensions.get ('window').height;
+var androidInput = {onAttempt: this.handleAuthenticationAttempted};
+var iosInput = {
+  description: 'Scan your fingerprint on the device scanner to continue',
+};
+
+export default class LoginScreenComponent extends Component {
+  constructor (props) {
+    super (props);
+    this.state = {
+      errorMessage: undefined,
+      popupShowed: false,
+    };
+  }
+
+  handleFingerprintShowed = () => {
+    this.setState ({popupShowed: true});
+  };
+
+  handleFingerprintDismissed = () => {
+    this.setState ({popupShowed: false});
+  };
+
+  componentDidMount () {
+    this.authenticate ();
+  }
+
+  authenticate = () => {
+    var input = undefined;
+    if (PlatformOSType === 'ios') {
+      input = iosInput;
+    } else {
+      input = androidInput;
+    }
+    FingerprintScanner.isSensorAvailable ()
+      .then (() => {
+        FingerprintScanner.authenticate (input)
+          .then (() => {
+            Alert.alert (
+              'Fingerprint Authentication',
+              'Authenticated successfully'
+            );
+            this.props.navigation.dispatch (
+              NavigationActions.reset ({
+                index: 0,
+                actions: [NavigationActions.navigate ({routeName: 'Home'})],
+              })
+            );
+          })
+          .catch (error => {
+            Alert.alert ('Fingerprint Authentication', error.message);
+          });
+      })
+      .catch (error => this.setState ({errorMessage: error.message}));
+  };
+
+  handleAuthenticationAttempted = error => {
+    Alert.alert ('Fingerprint Authentication', error.message);
+  };
+
+  componentWillUnmount () {
+    FingerprintScanner.release ();
+  }
+
+  render () {
+    const {errorMessage, popupShowed} = this.state;
+
+    return (
+      <Container
+        style={{
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+
+        <Image
+          style={{width: width, height: height}}
+          source={require ('../../assets/login_bg.png')}
+        />
+        <Content
+          style={{
+            flex: 1,
+            width: width * 0.9,
+            height: height * 0.9,
+            position: 'absolute',
+            borderRadius: 6,
+            borderWidth: 2,
+            borderColor: '#fffd',
+            backgroundColor: '#fffd',
+          }}
+        >
+
+          <Label style={{padding: 10, fontSize: 25}}>Sign in:</Label>
+          <Item
+            style={{marginLeft: 20, marginRight: 20, marginTop: 20}}
+            rounded
+          >
+            <Input placeholder={'Email ID'} />
+            <Icon active name="close" />
+          </Item>
+          <Item
+            style={{marginLeft: 20, marginRight: 20, marginTop: 25}}
+            rounded
+            last
+          >
+            <Input secureTextEntry={true} placeholder={'Passsword'} />
+            <Icon active name="close" />
+          </Item>
+          <Item
+            style={{
+              marginLeft: 20,
+              marginRight: 20,
+              marginTop: 25,
+              borderBottomWidth: 0,
+            }}
+          >
+            <Right><Text>Forgot password ?</Text></Right>
+          </Item>
+          <Item
+            style={{
+              marginLeft: 20,
+              marginRight: 20,
+              marginTop: 25,
+              borderBottomWidth: 0,
+            }}
+          >
+            <CheckBox checked={true} />
+
+            <Text style={{marginLeft: 20}}>Enable Touch ID / Fingerprint </Text>
+
+          </Item>
+
+          <Button
+            block
+            info
+            style={{
+              marginLeft: 20,
+              marginRight: 20,
+              marginTop: 25,
+              borderBottomWidth: 0,
+            }}
+            onPress={() => {
+              this.props.navigation.dispatch (
+                NavigationActions.reset ({
+                  index: 0,
+                  actions: [NavigationActions.navigate ({routeName: 'Home'})],
+                })
+              );
+            }}
+          >
+            <Text> Sign In </Text>
+          </Button>
+
+          <View
+            style={{
+              marginLeft: 20,
+              marginRight: 20,
+              marginTop: 25,
+              borderBottomWidth: 0,
+              alignItems: 'center',
+            }}
+          >
+            <Text> | </Text>
+            <Text style={{marginBottom: 5, marginTop: 5, color: 'blue'}}>
+              {' '}Or{' '}
+            </Text>
+            <Text> | </Text>
+          </View>
+
+          <Item
+            style={{
+              marginLeft: 20,
+              marginRight: 20,
+              marginTop: 25,
+              borderBottomWidth: 0,
+            }}
+          >
+            <Body>
+
+              <Icon
+                style={{fontSize: 70}}
+                name="md-finger-print"
+                onPress={() => {
+                  this.authenticate ();
+                }}
+              />
+
+            </Body>
+
+          </Item>
+
+        </Content>
+
+      </Container>
+    );
+  }
+}
